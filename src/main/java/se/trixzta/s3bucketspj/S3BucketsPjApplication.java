@@ -5,9 +5,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
@@ -102,6 +101,7 @@ public class S3BucketsPjApplication implements CommandLineRunner {
                     }
                     System.out.println("Vilken fil vill du ladda ner?");
                     String chosenKey = scanner.nextLine().trim();
+
                     boolean Matcher = filnamnenC3.contains(chosenKey);
                     if (!Matcher) {
                         System.out.println("Det du skrivit matchar inte filnamn");
@@ -114,6 +114,11 @@ public class S3BucketsPjApplication implements CommandLineRunner {
                         System.out.println("Filvägen existerar inte");
                         break;
                     }
+                    Path fullpath = downloadPath.resolve(Paths.get(chosenKey).getFileName());
+                    s3Client.getObject(request -> request
+                                    .bucket(bucketName)
+                                    .key(chosenKey),
+                            ResponseTransformer.toFile(fullpath.toFile()));
 
 
 
