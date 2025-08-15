@@ -56,16 +56,19 @@ public class S3BucketsPjApplication implements CommandLineRunner {
                 .build();
 
         GetItemRequest getItemRequest = GetItemRequest.builder()
-                .tableName("DemoPerson")
-                .key(Map.of("Personnummer", AttributeValue.builder().s("19720803-78331").build()))
-                .build();
+                .tableName("PersonRegister")
+                .key(Map.of("Personnummer" , AttributeValue.builder().s("20100101-0101").build()))
+                        .build();
+
         GetItemResponse response = dynamoDbClient.getItem(getItemRequest);
         Map<String, AttributeValue> returnedItem = response.item();
         if (returnedItem.isEmpty()) {
-            System.out.println("No item found");
+            System.out.println("Objekt ej hittad");
         } else {
-            String name = returnedItem.get("name").s();
-            System.out.println("Name: " + name);
+            String name = returnedItem.get("Namn" ).s();
+            String Age = returnedItem.get("Age").n();
+            String TelefonNummer = returnedItem.get("TelefonNummer").s();
+            System.out.println("Namn: " + name + "\n " + TelefonNummer + "\n " + Age);
 
 
         }
