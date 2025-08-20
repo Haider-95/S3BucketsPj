@@ -62,7 +62,6 @@
             <version>2.17.0</version>
         </dependency>
 
-
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>bedrockruntime</artifactId>

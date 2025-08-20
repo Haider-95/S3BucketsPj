@@ -8,5 +8,6 @@ public class S3BucketsPjApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(S3BucketsPjApplication.class, args);
+
     }
 }

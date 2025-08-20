@@ -1,13 +1,20 @@
 package se.trixzta.s3bucketspj;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
+import software.amazon.awssdk.services.bedrockruntime.model.ContentBlock;
+import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
+import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
+import software.amazon.awssdk.services.bedrockruntime.model.Message;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkClientException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -25,6 +32,7 @@ import java.util.UUID;
 @Service
 public class transkribering {
 
+
     private void runAI() {
         System.out.println("Running AI...");
 
@@ -33,7 +41,6 @@ public class transkribering {
         String accessKey = dotenv.get("ACCESS_KEY");
         String secretKey = dotenv.get("SECRET_KEY");
         String bedrockModel = dotenv.get("BEDROCK_MODEL");
-
 
         BedrockRuntimeClient bedrockRuntimeClient = BedrockRuntimeClient.builder()
                 .credentialsProvider(new AwsCredentialsProvider() {

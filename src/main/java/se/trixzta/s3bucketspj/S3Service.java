@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+/*
 @Service
 public class S3Service implements CommandLineRunner {
 
@@ -120,3 +121,4 @@ public class S3Service implements CommandLineRunner {
         }
     }
 }
+*/
