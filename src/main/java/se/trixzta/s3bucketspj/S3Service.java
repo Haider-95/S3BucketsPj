@@ -100,17 +100,22 @@ public class S3Service implements CommandLineRunner {
                     }
                     System.out.println("Vart vill du spara filen ? ");
                     Path downloadPath = Paths.get(scanner.nextLine());
-
                     if (!downloadPath.toFile().exists()) {
                         System.out.println("Filvägen existerar inte");
                         break;
                     }
                     Path fullpath = downloadPath.resolve(Paths.get(chosenKey).getFileName());
+                    if (!fullpath.toFile().exists()) {
+                        System.out.println("filen existerar inte, nedladdning fortsätter");
+                        break;
+                    } else if (fullpath.toFile().exists()) {
+                        System.out.println("filen existerar i vald filväg och går inte att ladda ner där");
+                        break;
+                    }
                     s3Client.getObject(request -> request
                                     .bucket(bucketName)
                                     .key(chosenKey),
                             ResponseTransformer.toFile(fullpath.toFile()));
-
                     break;
                 case 4:
                     return;
