@@ -15,7 +15,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
-
+// C3 lägga till så att listobjekten får varsin siffra om tid finnes
+// C4 göra så att det kollar och säger om filen man söker finns efter man valt bucket
 @Service
 public class S3Service implements CommandLineRunner {
 
@@ -46,7 +47,8 @@ public class S3Service implements CommandLineRunner {
             System.out.println("1.Lista alla filer");
             System.out.println("2.Ladda upp fil");
             System.out.println("3.Ladda ner");
-            System.out.println("4.Avsluta");
+            System.out.println("4.Söka bland filer");
+            System.out.println("5.Avsluta");
             System.out.println("Choose an option: ");
             int choice = Integer.parseInt(scanner.nextLine());
 
@@ -55,8 +57,8 @@ public class S3Service implements CommandLineRunner {
                     System.out.println(" Nu listas alla filer! ");
                     ListObjectsV2Request listReq = ListObjectsV2Request.builder().bucket(bucketName).build();
                     ListObjectsV2Response listRes = s3Client.listObjectsV2(listReq);
-                    List<String> filnamnen = listRes.contents().stream().map(S3Object::key).collect(Collectors.toList());
-                    for (String filnamn : filnamnen) {
+                    List<String> listc1 = listRes.contents().stream().map(S3Object::key).collect(Collectors.toList());
+                    for (String filnamn : listc1) {
                         System.out.println(filnamn);
                     }
                     break;
@@ -84,16 +86,17 @@ public class S3Service implements CommandLineRunner {
 
                     break;
                 case 3:
+
                     ListObjectsV2Request listReqC3 = ListObjectsV2Request.builder().bucket(bucketName).build();
                     ListObjectsV2Response listResC3 = s3Client.listObjectsV2(listReqC3);
-                    List<String> filnamnenC3 = listResC3.contents().stream().map(S3Object::key).filter(key -> !key.endsWith("/")).collect(Collectors.toList());
-                    for (String filnamn : filnamnenC3) {
+                    List<String> listC3 = listResC3.contents().stream().map(S3Object::key).filter(key -> !key.endsWith("/")).collect(Collectors.toList());
+                    for (String filnamn : listC3) {
                         System.out.println(filnamn);
                     }
                     System.out.println("Vilken fil vill du ladda ner?");
-                    String chosenKey = scanner.nextLine().trim();
+                    String downloadFile = scanner.nextLine().trim();
 
-                    boolean Matcher = filnamnenC3.contains(chosenKey);
+                    boolean Matcher = listC3.contains(downloadFile);
                     if (!Matcher) {
                         System.out.println("Det du skrivit matchar inte filnamn");
                         break;
@@ -104,7 +107,8 @@ public class S3Service implements CommandLineRunner {
                         System.out.println("Filvägen existerar inte");
                         break;
                     }
-                    Path fullpath = downloadPath.resolve(Paths.get(chosenKey).getFileName());
+
+                    Path fullpath = downloadPath.resolve(Paths.get(downloadFile).getFileName());
                     if (!fullpath.toFile().exists()) {
                         System.out.println("filen existerar inte, nedladdning fortsätter");
                         break;
@@ -114,10 +118,22 @@ public class S3Service implements CommandLineRunner {
                     }
                     s3Client.getObject(request -> request
                                     .bucket(bucketName)
-                                    .key(chosenKey),
+                                    .key(downloadFile),
                             ResponseTransformer.toFile(fullpath.toFile()));
                     break;
                 case 4:
+
+                    System.out.println("Vilken fil söker du?");
+                    String searchFile = scanner.nextLine().trim();
+                    String slashFix = searchFile.replace('\\', '/');
+
+
+
+                    break;
+
+
+
+                case 5:
                     return;
                 default:
             }
