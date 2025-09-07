@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+
 // C3 lägga till så att listobjekten får varsin siffra om tid finnes
 // C4 göra så att det kollar och säger om filen man söker finns efter man valt bucket
 @Service
