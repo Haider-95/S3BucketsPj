@@ -49,18 +49,25 @@ public class S3Service implements CommandLineRunner {
             System.out.println("3.Ladda ner");
             System.out.println("4.Söka bland filer");
             System.out.println("5.Avsluta");
-            System.out.println("Choose an option: ");
-            int choice = Integer.parseInt(scanner.nextLine());
+            System.out.println("Choose an option:");
 
-            switch (choice) {
+            String choice =  scanner.nextLine();
+            if (!choice.matches("[1-5]")) {
+                System.out.println("Ogiltigt val, försök igen.\n-------\n");
+                continue;
+            }
+            int intChoice = Integer.parseInt(choice);
+
+            switch (intChoice) {
                 case 1:
-                    System.out.println(" Nu listas alla filer! ");
+                    System.out.println("Nu listas alla filer!\n-------\n ");
                     ListObjectsV2Request listReq = ListObjectsV2Request.builder().bucket(bucketName).build();
                     ListObjectsV2Response listRes = s3Client.listObjectsV2(listReq);
                     List<String> listc1 = listRes.contents().stream().map(S3Object::key).collect(Collectors.toList());
                     for (String filnamn : listc1) {
                         System.out.println(filnamn);
                     }
+                    System.out.println("Det var alla filer\n-----\n");
                     break;
 
                 case 2:
@@ -87,16 +94,19 @@ public class S3Service implements CommandLineRunner {
                     break;
                 case 3:
 
+
                     ListObjectsV2Request listReqC3 = ListObjectsV2Request.builder().bucket(bucketName).build();
                     ListObjectsV2Response listResC3 = s3Client.listObjectsV2(listReqC3);
                     List<String> listC3 = listResC3.contents().stream().map(S3Object::key).filter(key -> !key.endsWith("/")).collect(Collectors.toList());
                     for (String filnamn : listC3) {
                         System.out.println(filnamn);
+
                     }
-                    System.out.println("Vilken fil vill du ladda ner?");
+                    System.out.println("\n Vilken fil vill du ladda ner?\n-------\n");
+
                     String downloadFile = scanner.nextLine().trim();
 
-                    boolean Matcher = listC3.contains(downloadFile);
+                    boolean Matcher = listC3.contains("S3B/" + downloadFile);
                     if (!Matcher) {
                         System.out.println("Det du skrivit matchar inte filnamn");
                         break;
@@ -110,7 +120,7 @@ public class S3Service implements CommandLineRunner {
 
                     Path fullpath = downloadPath.resolve(Paths.get(downloadFile).getFileName());
                     if (!fullpath.toFile().exists()) {
-                        System.out.println("filen existerar inte, nedladdning fortsätter");
+                        System.out.println("filen existerar inte på vald adress, nedladdning fortsätter\n-----------\n");
                         break;
                     } else if (fullpath.toFile().exists()) {
                         System.out.println("filen existerar i vald filväg och går inte att ladda ner där");
@@ -124,10 +134,14 @@ public class S3Service implements CommandLineRunner {
                 case 4:
 
                     System.out.println("Vilken fil söker du?");
-                    String searchFile = scanner.nextLine().trim();
-                    String slashFix = searchFile.replace('\\', '/');
-
-
+                    String searchFile = scanner.nextLine().trim().toLowerCase();
+                    String FSF = ("S3B/" + searchFile);
+                    ListObjectsV2Response listobjectSF = s3Client.listObjectsV2(software.amazon.awssdk.services.s3.model.ListObjectsV2Request.builder().bucket(bucketName).build());
+                   if (listobjectSF.contents().stream().anyMatch(obj->obj.key().equals(FSF))) {
+                          System.out.println("Filen "+ FSF +" finns i din bucket\n-------\n");
+                     } else {
+                          System.out.println("Filen " + FSF + " finns inte i din bucket\n-------\n");
+                   }
 
                     break;
 
