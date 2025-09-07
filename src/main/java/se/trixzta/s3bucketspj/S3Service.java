@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 // C3 lägga till så att listobjekten får varsin siffra om tid finnes
-// C4 göra så att det kollar äger om filen man söker finns efter man valt bucket
+// C4 göra så att det kollar och säger om filen man söker finns efter man valt bucket
 @Service
 public class S3Service implements CommandLineRunner {
 
@@ -94,13 +94,11 @@ public class S3Service implements CommandLineRunner {
                     break;
                 case 3:
 
-
                     ListObjectsV2Request listReqC3 = ListObjectsV2Request.builder().bucket(bucketName).build();
                     ListObjectsV2Response listResC3 = s3Client.listObjectsV2(listReqC3);
                     List<String> listC3 = listResC3.contents().stream().map(S3Object::key).filter(key -> !key.endsWith("/")).collect(Collectors.toList());
                     for (String filnamn : listC3) {
                         System.out.println(filnamn);
-
                     }
                     System.out.println("\n Vilken fil vill du ladda ner?\n-------\n");
 
@@ -151,13 +149,12 @@ public class S3Service implements CommandLineRunner {
                     break;
 
 
+
                 case 5:
                     return;
-
                 default:
-
             }
-        }
 
+        }
     }
 }
