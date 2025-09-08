@@ -10,9 +10,8 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import javax.xml.crypto.dsig.Transform;
-import java.io.File;
-import java.lang.ref.ReferenceQueue;
+
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,15 +19,11 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-import static software.amazon.awssdk.services.s3.model.ObjectIdentifier.*;
-
-// C3 lägga till så att listobjekten får varsin siffra om tid finnes
-// C4 göra så att det kollar och säger om filen man söker finns efter man valt bucket
 @Service
 public class S3Service implements CommandLineRunner {
 
     @Override
-    public void run(String... args) {
+    public void run(String... args) throws IOException {
 
         Dotenv dotenv = Dotenv.load();
 
@@ -50,7 +45,7 @@ public class S3Service implements CommandLineRunner {
 
         while (true) {
 
-            System.out.println("\nVälkommen till S3 Bucket hanteraren\n");
+            System.out.println("Välkommen till S3 Bucket hanteraren\n");
             System.out.println("Vilken bucket vill du använda ? ");
             System.out.println("1. " + bucketName);
             System.out.println("2. " + bucketName2);
@@ -77,10 +72,11 @@ public class S3Service implements CommandLineRunner {
                 System.out.println("4.Söka bland filer");
                 System.out.println("5.Ta bort filer");
                 System.out.println("6.Ladda upp mapp som zip");
+                System.out.println("7.Tillbaka tll bucketval");
                 System.out.println("Välj ett alternativ:\n");
 
                 String choice = scanner.nextLine();
-                if (!choice.matches("[1-6]")) {
+                if (!choice.matches("[1-7]")) {
                     System.out.println("Ogiltigt val, försök igen.\n-------\n");
                     continue;
                 }
@@ -159,17 +155,26 @@ public class S3Service implements CommandLineRunner {
 
                         System.out.println("Vilken fil söker du?");
                         String searchFile = scanner.nextLine().trim().toLowerCase();
-                        String FSF = (searchFile);
+
                         ListObjectsV2Response listobjectSF = s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketName).build());
+                        listobjectSF.contents().stream().anyMatch(obj -> obj.key().contains(searchFile));
 
-                        if (listobjectSF.contents().stream().anyMatch(obj -> obj.key().matches(FSF))) {
-                            System.out.println(FSF + " Finns i din bucket\n-------\n");
+
+                        if (listobjectSF.contents().stream()
+                                .anyMatch(obj -> obj.key().toLowerCase().contains(searchFile))) {
+
+                            System.out.println("Följande filer har din sökning som en del av namnet\n-------");
+                            listobjectSF.contents().stream()
+                                    .map(S3Object::key)
+                                    .filter(key -> key.toLowerCase().contains(searchFile))
+                                    .forEach(System.out::println);
+
+
+                            System.out.println("--------");
+
                         } else {
-                            System.out.println(FSF + " Finns inte i din bucket\n-------\n");
-
-
+                            System.out.println(searchFile + "\nFinns inte i din bucket\n-------\n");
                         }
-//lägga till så man kan söka med del av filnamn
 
 
                         break;
@@ -195,31 +200,49 @@ public class S3Service implements CommandLineRunner {
                         }
                         break;
                     case 6:
+                        //mappens sökväg
                         System.out.println("Vilken mapp vill du ladda upp");
-                        Path folderPath = Paths.get(scanner.nextLine());
-                        if (Files.notExists(folderPath) || !Files.isDirectory(folderPath)) {
-                            System.out.println("mappen du har valt existerar inte, du går tillbaka tll menyn ");
-                            break;
-                        }else {      System.out.println(folderPath + " existerar  ");
-                        }
+                        Path folderPath = Paths.get(scanner.nextLine().trim());
 
-                        System.out.println("Vad ska den heta? ");
+                        // if-satas för att kolla om den finns
+                        if (Files.notExists(folderPath) || !Files.isDirectory(folderPath)) {
+                            System.out.println("Mappen du har valt existerar inte, du går tillbaka tll menyn\n");
+                            break;
+                        } else {
+                            System.out.println(folderPath + " existerar  redan  ");
+                        }
+                        //sc för att döpa filen i bucket
+                        System.out.println("\nVad ska den heta?\n");
                         String zipNaming = scanner.nextLine().trim().toLowerCase();
 
-                        if (zipNaming.length() == 0) {
-                            System.out.println("ingen input");
-                            break;
+                        //if-sats för att säkerställa filtypen blir .zip
+                        if (!zipNaming.endsWith(".zip")) {
+                            zipNaming = zipNaming + ".zip";
                         }
 
+                        //skapar en tempzip
+                        Path tempZip = Files.createTempFile("upload-", "-" + zipNaming);
+
+
+
+                        //byggrequest i s3 bucket med zipNaming
                         PutObjectRequest putReqZip = PutObjectRequest.builder()
                                 .bucket(bucketChoice)
                                 .key(zipNaming).build();
 
-                        PutObjectResponse putObjectResponse;
+                        //avslutar putobjreq
+                        s3Client.putObject(putReqZip, RequestBody.fromFile(tempZip));
 
-                        System.out.println("Din fil är uppladdad till " + bucketChoice + "\\" + zipNaming);
+                        // deeletear tempZip
+                        try {
+                            Files.deleteIfExists(tempZip);
+                        } catch (IOException e) {
+                        }
+
                         break;
 
+                    case 7:
+                        break;
                 }
                 break;
             }
