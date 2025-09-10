@@ -118,7 +118,7 @@ public class S3Service implements CommandLineRunner {
 
                         ListObjectsV2Request listReqC3 = ListObjectsV2Request.builder().bucket(bucketChoice).build();
                         ListObjectsV2Response listResC3 = s3Client.listObjectsV2(listReqC3);
-                        List<String> listC3 = listResC3.contents().stream().map(S3Object::key).filter(key -> !key.endsWith("/")).collect(Collectors.toList());
+                        List<String> listC3 = listResC3.contents().stream().map(S3Object::key).filter(key -> !key.endsWith("/")).toList();
                         for (String filnamn : listC3) {
                             System.out.println(filnamn);
                         }
@@ -127,9 +127,11 @@ public class S3Service implements CommandLineRunner {
                         String downloadFile = scanner.nextLine().trim();
 
                         boolean Matcher = listC3.contains(downloadFile);
+
                         if (!Matcher) {
                             System.out.println("Det du skrivit matchar inte filnamn");
                             break;
+
                         }
                         System.out.println("Vart vill du spara filen ? ");
                         Path downloadPath = Paths.get(scanner.nextLine());
@@ -146,19 +148,21 @@ public class S3Service implements CommandLineRunner {
                             System.out.println("\nFilen existerar i vald filväg och går inte att ladda ner där");
                             break;
                         }
-                        s3Client.getObject(request -> request
-                                        .bucket(bucketName)
-                                        .key(downloadFile),
-                                ResponseTransformer.toFile(fullpath.toFile()));
+
+                        GetObjectRequest getReq = GetObjectRequest.builder()
+                                .bucket(bucketChoice)
+                                .key(downloadFile).build();
+
+                        s3Client.getObject(getReq, ResponseTransformer.toFile(fullpath));
                         break;
+
                     case 4:
 
                         System.out.println("Vilken fil söker du?");
                         String searchFile = scanner.nextLine().trim().toLowerCase();
 
-                        ListObjectsV2Response listobjectSF = s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketName).build());
+                        ListObjectsV2Response listobjectSF = s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketChoice).build());
                         listobjectSF.contents().stream().anyMatch(obj -> obj.key().contains(searchFile));
-
 
                         if (listobjectSF.contents().stream()
                                 .anyMatch(obj -> obj.key().toLowerCase().contains(searchFile))) {
@@ -190,7 +194,10 @@ public class S3Service implements CommandLineRunner {
                         String deleteChoice = scanner.nextLine().trim();
 
 
-                        DeleteObjectResponse deleteObjectsRes = s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketChoice).key(deleteChoice).build());
+                        DeleteObjectResponse deleteObjectsRes = s3Client.deleteObject(DeleteObjectRequest.builder()
+                                .bucket(bucketChoice)
+                                .key(deleteChoice).build());
+
                         if (listC5.contains(deleteChoice)) {
                             System.out.println("Filen " + deleteChoice + " finns inte din bucket längre");
                             break;
@@ -220,9 +227,8 @@ public class S3Service implements CommandLineRunner {
                             zipNaming = zipNaming + ".zip";
                         }
 
-                        //skapar en tempzip
-                        Path tempZip = Files.createTempFile("upload-", "-" + zipNaming);
-
+                        //skapar en temp fil .zip
+                        Path tempZip = Files.createTempFile("upload-", ".zip");
 
 
                         //byggrequest i s3 bucket med zipNaming
@@ -230,7 +236,7 @@ public class S3Service implements CommandLineRunner {
                                 .bucket(bucketChoice)
                                 .key(zipNaming).build();
 
-                        //avslutar putobjreq
+                        //skickar upp temp fil
                         s3Client.putObject(putReqZip, RequestBody.fromFile(tempZip));
 
                         // deeletear tempZip
