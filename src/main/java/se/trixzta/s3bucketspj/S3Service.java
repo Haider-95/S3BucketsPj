@@ -18,6 +18,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+import java.util.zip.ZipOutputStream;
+
 
 @Service
 public class S3Service implements CommandLineRunner {
@@ -224,18 +226,28 @@ public class S3Service implements CommandLineRunner {
 
                         //if-sats för att säkerställa filtypen blir .zip
                         if (!zipNaming.endsWith(".zip")) {
-                            zipNaming = zipNaming + ".zip";
+                            zipNaming += ".zip";
                         }
 
                         //skapar en temp fil .zip
                         Path tempZip = Files.createTempFile("upload-", ".zip");
 
-
+                        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(tempZip))) {
+                            Files.walk(folderPath).filter(Files::isRegularFile).forEach(p -> {
+                                String e = folderPath.relativize(p).toString().replace('\\','/');
+                                try {
+                                    zos.putNextEntry(new java.util.zip.ZipEntry(e));
+                                    Files.copy(p, zos);
+                                    zos.closeEntry();
+                                } catch (IOException ex) { throw new RuntimeException(ex); }
+                            });
+                        }
                         //byggrequest i s3 bucket med zipNaming
                         PutObjectRequest putReqZip = PutObjectRequest.builder()
                                 .bucket(bucketChoice)
-                                .key(zipNaming).build();
-
+                                .key(zipNaming)
+                                .contentType("application/zip")
+                                .build();
                         //skickar upp temp fil
                         s3Client.putObject(putReqZip, RequestBody.fromFile(tempZip));
 
