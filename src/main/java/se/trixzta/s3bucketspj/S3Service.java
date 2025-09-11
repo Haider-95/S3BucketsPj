@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
@@ -63,7 +64,7 @@ public class S3Service implements CommandLineRunner {
                 System.out.println("avsluta");
             } else {
                 System.out.println("Ogiltigt val, avslutar programmet");
-                return;
+               break;
             }
 
 
@@ -232,11 +233,12 @@ public class S3Service implements CommandLineRunner {
                         //skapar en temp fil .zip
                         Path tempZip = Files.createTempFile("upload-", ".zip");
 
+                        // packar alla filer i folderPath till en zip-fil på tempZip
                         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(tempZip))) {
                             Files.walk(folderPath).filter(Files::isRegularFile).forEach(p -> {
                                 String e = folderPath.relativize(p).toString().replace('\\','/');
                                 try {
-                                    zos.putNextEntry(new java.util.zip.ZipEntry(e));
+                                    zos.putNextEntry(new ZipEntry(e));
                                     Files.copy(p, zos);
                                     zos.closeEntry();
                                 } catch (IOException ex) { throw new RuntimeException(ex); }
@@ -248,10 +250,10 @@ public class S3Service implements CommandLineRunner {
                                 .key(zipNaming)
                                 .contentType("application/zip")
                                 .build();
-                        //skickar upp temp fil
+                        //skickar upp temp
                         s3Client.putObject(putReqZip, RequestBody.fromFile(tempZip));
 
-                        // deeletear tempZip
+                        // deeletear temp
                         try {
                             Files.deleteIfExists(tempZip);
                         } catch (IOException e) {
