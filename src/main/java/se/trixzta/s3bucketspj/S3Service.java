@@ -214,7 +214,7 @@ public class S3Service implements CommandLineRunner {
                         System.out.println("Vilken mapp vill du ladda upp");
                         Path folderPath = Paths.get(scanner.nextLine().trim());
 
-                        // if-satas för att kolla om den finns
+                        // ifsatas för att kolla om den finns
                         if (Files.notExists(folderPath) || !Files.isDirectory(folderPath)) {
                             System.out.println("Mappen du har valt existerar inte, du går tillbaka tll menyn\n");
                             break;
@@ -225,7 +225,7 @@ public class S3Service implements CommandLineRunner {
                         System.out.println("\nVad ska den heta?\n");
                         String zipNaming = scanner.nextLine().trim().toLowerCase();
 
-                        //if-sats för att säkerställa filtypen blir .zip
+                        //ifsats för att säkerstäälla filtypen blir .zip
                         if (!zipNaming.endsWith(".zip")) {
                             zipNaming += ".zip";
                         }
@@ -233,7 +233,7 @@ public class S3Service implements CommandLineRunner {
                         //skapar en temp fil .zip
                         Path tempZip = Files.createTempFile("upload-", ".zip");
 
-                        // packar alla filer i folderPath till en zip-fil på tempZip
+                        // packar alla filer i folderPath till en zipfil på tempZip
                         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(tempZip))) {
                             Files.walk(folderPath).filter(Files::isRegularFile).forEach(p -> {
                                 String e = folderPath.relativize(p).toString().replace('\\','/');
