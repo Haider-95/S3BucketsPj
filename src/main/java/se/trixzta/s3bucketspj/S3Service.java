@@ -144,9 +144,9 @@ public class S3Service implements CommandLineRunner {
                         }
 
                         Path fullpath = downloadPath.resolve(Paths.get(downloadFile).getFileName());
+                        System.out.println(fullpath);
                         if (!fullpath.toFile().exists()) {
                             System.out.println("\nFilen existerar inte på vald adress, nedladdning fortsätter\n-----------\n");
-                            break;
                         } else if (fullpath.toFile().exists()) {
                             System.out.println("\nFilen existerar i vald filväg och går inte att ladda ner där");
                             break;
